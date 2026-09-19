@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>VoxPME — Softphone WebRTC (test)</title>
+    <script src="sip.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 16px;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            font-size: 18px;
+            margin: 0 0 4px;
+            color: #f8fafc;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        fieldset {
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        legend {
+            padding: 0 6px;
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: #94a3b8;
+            margin: 8px 0 4px;
+        }
+
+        input {
+            width: 100%;
+            padding: 9px 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        button {
+            width: 100%;
+            padding: 11px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn-connect {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-connect:hover {
+            background: #4f46e5;
+        }
+
+        .btn-call {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-call:hover {
+            background: #15803d;
+        }
+
+        .btn-hangup {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-hangup:hover {
+            background: #b91c1c;
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #0f172a;
+            margin-bottom: 16px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #64748b;
+            flex-shrink: 0;
+        }
+
+        .dot.ok {
+            background: #22c55e;
+        }
+
+        .dot.busy {
+            background: #f59e0b;
+        }
+
+        .dot.err {
+            background: #ef4444;
+        }
+
+        .log {
+            margin-top: 16px;
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #64748b;
+            max-height: 140px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>VoxPME — Softphone de test</h1>
+        <div class="subtitle">Client WebRTC (SIP.js) pour valider un endpoint PJSIP</div>
+
+        <div class="status" id="status">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText">Déconnecté</span>
+        </div>
+
+        <fieldset>
+            <legend>Connexion</legend>
+            <label>Serveur WSS (IP:port de la VM)</label>
+            <input id="server" placeholder="192.168.1.4/ws-sip" value="192.168.1.4/ws-sip">
+            <label>Identifiant SIP (ex: 9001-t001)</label>
+            <input id="username" value="9001-t001">
+            <label>Mot de passe</label>
+            <input id="password" type="password" value="webrtctest123">
+            <label>Domaine SIP (généralement l'IP de la VM)</label>
+            <input id="domain" placeholder="192.168.1.4" value="192.168.1.4">
+            <button class="btn-connect" id="btnConnect">Se connecter</button>
+        </fieldset>
+
+        <fieldset>
+            <legend>Appel</legend>
+            <label>Numéro / extension à appeler</label>
+            <input id="target" placeholder="9002-t001" value="1001-t001">
+            <button class="btn-call" id="btnCall" disabled>Appeler</button>
+            <button class="btn-hangup" id="btnHangup" disabled>Raccrocher</button>
+            <audio id="remoteAudio" autoplay></audio>
+        </fieldset>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        let userAgent = null;
+        let session = null;
+        const remoteAudio = document.getElementById('remoteAudio');
+        const logEl = document.getElementById('log');
+
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logEl.textContent += `[${time}] ${msg}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function setStatus(text, kind) {
+            document.getElementById('statusText').textContent = text;
+            const dot = document.getElementById('statusDot');
+            dot.className = 'dot' + (kind ? ' ' + kind : '');
+        }
+
+        document.getElementById('btnConnect').addEventListener('click', async () => {
+            const server = document.getElementById('server').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const domain = document.getElementById('domain').value.trim();
+
+            if (!server || !username || !password || !domain) {
+                log('Erreur: tous les champs de connexion sont requis.');
+                return;
+            }
+
+            setStatus('Connexion en cours...', 'busy');
+            document.getElementById('btnConnect').disabled = true;
+
+            const uri = SIP.UserAgent.makeURI(`sip:${username}@${domain}`);
+            if (!uri) {
+                log('Erreur: URI SIP invalide.');
+                setStatus('Erreur de configuration', 'err');
+                document.getElementById('btnConnect').disabled = false;
+                return;
+            }
+
+            const uaOptions = {
+                uri,
+                transportOptions: {
+                    server: `wss://${server}/ws`
+                },
+                authorizationUsername: username,
+                authorizationPassword: password,
+                sessionDescriptionHandlerFactoryOptions: {
+                    peerConnectionConfiguration: {
+                        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                    }
+                }
+            };
+
+            userAgent = new SIP.UserAgent(uaOptions);
+
+            userAgent.delegate = {
+                onInvite: (invitation) => {
+                    log('Appel entrant reçu, réponse automatique refusée dans ce test.');
+                    invitation.reject();
+                }
+            };
+
+            try {
+                await userAgent.start();
+                const registerer = new SIP.Registerer(userAgent);
+                registerer.stateChange.addListener((state) => {
+                    log(`Registerer: ${state}`);
+                    if (state === SIP.RegistererState.Registered) {
+                        setStatus('Connecté et enregistré', 'ok');
+                        document.getElementById('btnCall').disabled = false;
+                    } else if (state === SIP.RegistererState.Unregistered) {
+                        setStatus('Déconnecté', '');
+                        document.getElementById('btnCall').disabled = true;
+                    }
+                });
+                await registerer.register();
+                log('Connexion WebSocket établie, enregistrement en cours...');
+            } catch (err) {
+                log('Erreur de connexion: ' + err.message);
+                setStatus('Échec de connexion (voir log)', 'err');
+                document.getElementById('btnConnect').disabled = false;
+            }
+        });
+
+        document.getElementById('btnCall').addEventListener('click', async () => {
+            const target = document.getElementById('target').value.trim();
+            const domain = document.getElementById('domain').value.trim();
+            if (!target || !userAgent) return;
+
+            const targetURI = SIP.UserAgent.makeURI(`sip:${target}@${domain}`);
+            if (!targetURI) {
+                log('Erreur: destination invalide.');
+                return;
+            }
+
+            const inviter = new SIP.Inviter(userAgent, targetURI, {
+                sessionDescriptionHandlerOptions: {
+                    constraints: { audio: true, video: false }
+                }
+            });
+
+            session = inviter;
+
+            session.stateChange.addListener((state) => {
+                log(`Appel: ${state}`);
+                if (state === SIP.SessionState.Established) {
+                    setStatus(`En communication avec ${target}`, 'ok');
+                    document.getElementById('btnCall').disabled = true;
+                    document.getElementById('btnHangup').disabled = false;
+                    attachRemoteAudio(session);
+                } else if (state === SIP.SessionState.Terminated) {
+                    setStatus('Connecté et enregistré', 'ok');
+                    document.getElementById('btnCall').disabled = false;
+                    document.getElementById('btnHangup').disabled = true;
+                    session = null;
+                }
+            });
+
+            try {
+                await inviter.invite();
+                log(`Appel sortant vers ${target} lancé.`);
+                setStatus('Appel en cours...', 'busy');
+            } catch (err) {
+                log('Erreur lors de l\'appel: ' + err.message);
+            }
+        });
+
+        document.getElementById('btnHangup').addEventListener('click', async () => {
+            if (!session) return;
+            try {
+                if (session.state === SIP.SessionState.Established) {
+                    await session.bye();
+                } else {
+                    await session.cancel();
+                }
+                log('Raccroché.');
+            } catch (err) {
+                log('Erreur au raccrochage: ' + err.message);
+            }
+        });
+
+        function attachRemoteAudio(session) {
+            const pc = session.sessionDescriptionHandler.peerConnection;
+            const remoteStream = new MediaStream();
+            pc.getReceivers().forEach((receiver) => {
+                if (receiver.track) remoteStream.addTrack(receiver.track);
+            });
+            remoteAudio.srcObject = remoteStream;
+        }
+    </script>
+</body>
+
+</html>

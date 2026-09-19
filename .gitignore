@@ -1,0 +1,32 @@
+# Secrets
+.env
+*.env
+**/secrets/
+
+# Certificats
+*.pem
+*.key
+*.crt
+
+# Logs et résultats de test volumineux
+*.log
+uac_*.csv
+uac_*.log
+resultats_*.csv
+
+# Docker
+**/postgres_data/
+**/grafana_data/
+**/prometheus_data/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store

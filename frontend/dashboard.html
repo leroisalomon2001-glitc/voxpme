@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>VoxPME — Dashboard Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <script src="sip.min.js"></script>
+    <style>
+        :root {
+            --bg: #070b14;
+            --surface: #101827;
+            --surface2: #111d31;
+            --line: rgba(148, 163, 184, .13);
+            --text: #eef4ff;
+            --muted: #8b9ab2;
+            --cyan: #27e1ff;
+            --blue: #6685ff;
+            --violet: #9b6cff;
+            --green: #3ee6a2;
+            --red: #ff647c;
+            --shadow: 0 22px 70px rgba(0, 0, 0, .35)
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, system-ui, sans-serif
+        }
+
+        body {
+            overflow-x: hidden
+        }
+
+        body:before {
+            content: "";
+            position: fixed;
+            inset: -30%;
+            z-index: -3;
+            background: radial-gradient(circle at 15% 20%, rgba(39, 225, 255, .1), transparent 28%), radial-gradient(circle at 85% 10%, rgba(155, 108, 255, .12), transparent 25%), radial-gradient(circle at 70% 90%, rgba(102, 133, 255, .08), transparent 28%);
+            animation: aurora 16s ease-in-out infinite alternate
+        }
+
+        body:after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            pointer-events: none;
+            opacity: .25;
+            background-image: linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .025) 1px, transparent 1px);
+            background-size: 42px 42px
+        }
+
+        @keyframes aurora {
+            from {
+                transform: translate3d(-2%, 0, 0) scale(1)
+            }
+
+            to {
+                transform: translate3d(2%, -2%, 0) scale(1.04)
+            }
+        }
+
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(14px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(62, 230, 162, 0)
+            }
+
+            50% {
+                box-shadow: 0 0 0 7px rgba(62, 230, 162, .08)
+            }
+        }
+
+        @keyframes shimmer {
+            from {
+                background-position: -300% 0
+            }
+
+            to {
+                background-position: 300% 0
+            }
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -220
+            }
+        }
+
+        @media(prefers-reduced-motion:reduce) {
+
+            *,
+            *:before,
+            *:after {
+                animation: none !important;
+                transition: none !important
+            }
+        }
+
+        .app {
+            display: flex;
+            min-height: 100vh
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 250px;
+            padding: 25px 16px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--line);
+            background: rgba(7, 11, 20, .82);
+            backdrop-filter: blur(24px);
+            z-index: 20
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 10px 28px
+        }
+
+        .brand-mark {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--cyan), var(--violet));
+            display: grid;
+            place-items: center;
+            box-shadow: 0 0 30px rgba(39, 225, 255, .22)
+        }
+
+        .brand-mark svg {
+            width: 22px
+        }
+
+        .brand-name {
+            font-family: "Space Grotesk";
+            font-size: 18px;
+            font-weight: 700
+        }
+
+        .brand-sub {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 2px
+        }
+
+        .nav-label {
+            font-size: 10px;
+            color: #5f708b;
+            font-weight: 700;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+            padding: 0 12px 8px
+        }
+
+        .nav-btn {
+            width: 100%;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--muted);
+            padding: 11px 12px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            text-align: left;
+            transition: .2s;
+            margin-bottom: 4px
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            background: rgba(102, 133, 255, .1);
+            border-color: rgba(102, 133, 255, .18);
+            color: var(--text);
+            transform: translateX(2px)
+        }
+
+        .nav-icon {
+            width: 18px;
+            text-align: center;
+            font-size: 16px
+        }
+
+        .sidebar-bottom {
+            margin-top: auto
+        }
+
+        .status-mini {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .025);
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite
+        }
+
+        .main {
+            width: calc(100% - 250px);
+            margin-left: 250px;
+            padding: 26px 32px 60px
+        }
+
+        .topbar {
+            height: 66px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px
+        }
+
+        .top-title {
+            font-family: "Space Grotesk";
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -.04em
+        }
+
+        .top-sub {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 4px
+        }
+
+        .session-box {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .session-label {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: right
+        }
+
+        .session-label .who {
+            display: block;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 12px
+        }
+
+        .role-tag {
+            display: inline-block;
+            font-size: 9px;
+            padding: 4px 7px;
+            border-radius: 999px;
+            margin-top: 4px;
+            font-weight: 700;
+            font-family: "JetBrains Mono"
+        }
+
+        .role-tag.global {
+            background: rgba(155, 108, 255, .13);
+            color: #b99bff
+        }
+
+        .role-tag.tenant {
+            background: rgba(39, 225, 255, .1);
+            color: var(--cyan)
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 15px;
+            color: #041017;
+            background: linear-gradient(135deg, var(--cyan), #77a4ff);
+            font-weight: 800;
+            font-size: 12px;
+            box-shadow: 0 8px 25px rgba(39, 225, 255, .13);
+            transition: .2s
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08)
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, .035);
+            border: 1px solid var(--line);
+            color: var(--muted);
+            box-shadow: none
+        }
+
+        .btn-ghost:hover {
+            color: var(--text);
+            border-color: rgba(148, 163, 184, .25)
+        }
+
+        .btn-small {
+            padding: 7px 11px;
+            font-size: 11px
+        }
+
+        #view-login {
+            display: none
+        }
+
+        .login-wrap {
+            min-height: 82vh;
+            display: grid;
+            place-items: center;
+            position: relative;
+            overflow: hidden
+        }
+
+        .signal-line {
+            position: absolute;
+            inset: 15% 0 auto;
+            width: 100%;
+            height: 180px;
+            opacity: .7
+        }
+
+        .signal-line path {
+            fill: none;
+            stroke: #27e1ff;
+            stroke-width: 1.5;
+            stroke-dasharray: 6 11;
+            animation: dash 8s linear infinite
+        }
+
+        .login-card {
+            width: min(410px, calc(100vw - 40px));
+            padding: 34px;
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background: rgba(14, 22, 37, .82);
+            backdrop-filter: blur(22px);
+            box-shadow: var(--shadow);
+            animation: rise .6s ease both
+        }
+
+        .login-card:before {
+            content: "";
+            display: block;
+            width: 70px;
+            height: 3px;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--cyan), var(--violet));
+            margin-bottom: 25px
+        }
+
+        .login-card .brand {
+            padding: 0 0 8px
+        }
+
+        .login-card .brand-mark {
+            width: 34px;
+            height: 34px
+        }
+
+        .field {
+            margin-bottom: 15px
+        }
+
+        .field label {
+            display: block;
+            font-size: 10px;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .09em;
+            margin-bottom: 7px
+        }
+
+        .text-input {
+            width: 100%;
+            background: rgba(3, 8, 18, .7);
+            border: 1px solid var(--line);
+            color: var(--text);
+            padding: 11px 12px;
+            border-radius: 10px;
+            outline: none;
+            transition: .2s
+        }
+
+        .text-input:focus {
+            border-color: rgba(39, 225, 255, .55);
+            box-shadow: 0 0 0 4px rgba(39, 225, 255, .07)
+        }
+
+        .login-card .btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px
+        }
+
+        .login-error {
+            display: none;
+            color: var(--red);
+            font-size: 12px;
+            margin-top: 12px
+        }
+
+        .login-error.show {
+            display: block
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .hero {
+            position: relative;
+            padding: 26px 28px;
+            margin-bottom: 22px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            overflow: hidden;
+            background: linear-gradient(110deg, rgba(39, 225, 255, .07), rgba(155, 108, 255, .06) 55%, rgba(255, 255, 255, .025));
+            box-shadow: var(--shadow)
+        }
+
+        .hero:after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, .05) 50%, transparent 65%);
+            background-size: 300% 100%;
+            animation: shimmer 7s linear infinite
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1
+        }
+
+        .hero-kicker {
+            color: var(--cyan);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .14em;
+            text-transform: uppercase
+        }
+
+        .hero h1 {
+            font-family: "Space Grotesk";
+            font-size: 30px;
+            line-height: 1.05;
+            margin: 8px 0;
+            letter-spacing: -.045em
+        }
+
+        .hero p {
+            color: var(--muted);
+            font-size: 12px;
+            margin: 0;
+            max-width: 650px
+        }
+
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px
+        }
+
+        .section-head h2 {
+            font-family: "Space Grotesk";
+            font-size: 17px;
+            margin: 0
+        }
+
+        .section-head-right {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .section-count {
+            font-family: "JetBrains Mono";
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .tenant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px
+        }
+
+        .tenant-card {
+            position: relative;
+            border: 1px solid var(--line);
+            background: linear-gradient(145deg, rgba(17, 26, 43, .88), rgba(10, 16, 29, .88));
+            border-radius: 17px;
+            padding: 20px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: .25s;
+            animation: rise .5s ease both
+        }
+
+        .tenant-card:before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 100% 0, rgba(39, 225, 255, .09), transparent 38%);
+            opacity: 0;
+            transition: .25s
+        }
+
+        .tenant-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(39, 225, 255, .28);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, .25)
+        }
+
+        .tenant-card:hover:before {
+            opacity: 1
+        }
+
+        .tenant-card-head {
+            display: flex;
+            align-items: center;
+            margin-bottom: 17px;
+            position: relative
+        }
+
+        .tenant-name {
+            font-family: "Space Grotesk";
+            font-weight: 700;
+            font-size: 15px
+        }
+
+        .tenant-slug {
+            color: var(--muted);
+            margin-left: 8px;
+            font-size: 10px
+        }
+
+        .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 9px;
+            flex-shrink: 0
+        }
+
+        .dot.on {
+            background: var(--green);
+            box-shadow: 0 0 0 4px rgba(62, 230, 162, .09);
+            animation: pulse 2.5s infinite
+        }
+
+        .dot.off {
+            background: #5f708b
+        }
+
+        .dot.busy {
+            background: var(--blue)
+        }
+
+        .dot.err {
+            background: var(--red)
+        }
+
+        .tenant-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 17px
+        }
+
+        .tenant-metrics>div {
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .035);
+            border: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .m-value {
+            font-family: "Space Grotesk";
+            font-size: 19px;
+            font-weight: 700
+        }
+
+        .m-label {
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: .06em
+        }
+
+        .cost-bar-track {
+            height: 5px;
+            background: #182237;
+            border-radius: 99px;
+            overflow: hidden
+        }
+
+        .cost-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--cyan), var(--violet));
+            box-shadow: 0 0 12px rgba(39, 225, 255, .3);
+            transition: width 1s ease
+        }
+
+        .cost-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 8px
+        }
+
+        #view-detail {
+            display: none
+        }
+
+        .breadcrumb {
+            display: inline-flex;
+            color: var(--muted);
+            font-size: 11px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            padding: 7px 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .025);
+            border: 1px solid var(--line)
+        }
+
+        .breadcrumb:hover {
+            color: var(--text)
+        }
+
+        .detail-heading {
+            font-family: "Space Grotesk";
+            font-size: 30px;
+            letter-spacing: -.04em;
+            margin: 0 0 20px
+        }
+
+        .detail-heading .slug {
+            color: var(--muted);
+            font-weight: 500;
+            font-size: 12px;
+            margin-left: 10px
+        }
+
+        .stat-strip {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 24px
+        }
+
+        .stat {
+            position: relative;
+            padding: 17px;
+            border: 1px solid var(--line);
+            border-radius: 15px;
+            background: rgba(17, 26, 43, .72);
+            overflow: hidden;
+            animation: rise .45s ease both
+        }
+
+        .stat:after {
+            content: "";
+            position: absolute;
+            right: -20px;
+            bottom: -25px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(39, 225, 255, .06);
+            filter: blur(8px)
+        }
+
+        .stat .value {
+            font-family: "Space Grotesk";
+            font-size: 22px;
+            font-weight: 700
+        }
+
+        .stat .label {
+            color: var(--muted);
+            font-size: 9px;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: .06em
+        }
+
+        .columns {
+            display: grid;
+            grid-template-columns: minmax(300px, .85fr) minmax(420px, 1.5fr);
+            gap: 20px;
+            align-items: start
+        }
+
+        .panel-head-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px
+        }
+
+        .panel-title-bare {
+            font-family: "Space Grotesk";
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px
+        }
+
+        .panel-block {
+            border: 1px solid var(--line);
+            background: rgba(12, 20, 34, .78);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, .12)
+        }
+
+        .panel-block-title {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 13px 15px;
+            border-bottom: 1px solid var(--line);
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .1em
+        }
+
+        .inline-form-card {
+            padding: 16px;
+            margin-bottom: 12px
+        }
+
+        .inline-form-actions,
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 9px;
+            margin-top: 5px
+        }
+
+        .list-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 15px;
+            border-bottom: 1px solid var(--line);
+            font-size: 12px;
+            transition: .18s
+        }
+
+        .list-row:last-child {
+            border-bottom: none
+        }
+
+        .list-row:hover {
+            background: rgba(255, 255, 255, .025)
+        }
+
+        .ep-left {
+            display: flex;
+            align-items: center
+        }
+
+        .ep-name {
+            color: var(--muted);
+            margin-left: 10px
+        }
+
+        .ep-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .status-tag {
+            font-size: 9px;
+            color: var(--muted);
+            font-family: "JetBrains Mono";
+            padding: 4px 7px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, .035)
+        }
+
+        .status-tag.live {
+            color: var(--green);
+            background: rgba(62, 230, 162, .08)
+        }
+
+        .chart-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 18px
+        }
+
+        .chart-card {
+            flex: 1;
+            padding: 15px
+        }
+
+        .chart-card .chart-caption {
+            color: var(--muted);
+            font-size: 9px;
+            margin-top: 7px
+        }
+
+        .donut-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+
+        .donut-legend {
+            font-size: 10px
+        }
+
+        .donut-legend div {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 7px
+        }
+
+        .swatch {
+            width: 7px;
+            height: 7px;
+            border-radius: 2px
+        }
+
+        .call-row {
+            display: block
+        }
+
+        .call-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px
+        }
+
+        .call-parties {
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .dir-arrow {
+            width: 14px;
+            text-align: center;
+            font-weight: 800
+        }
+
+        .dir-arrow.in {
+            color: var(--green)
+        }
+
+        .dir-arrow.out {
+            color: var(--cyan)
+        }
+
+        .call-meta {
+            color: var(--muted);
+            font-size: 9px;
+            margin-top: 4px
+        }
+
+        .call-cost {
+            text-align: right;
+            font-size: 11px
+        }
+
+        .state-msg {
+            color: var(--muted);
+            font-size: 12px;
+            padding: 18px 4px
+        }
+
+        .state-msg.error {
+            color: var(--red)
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 5, 12, .72);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 20px
+        }
+
+        .modal-card {
+            width: 390px;
+            max-width: 100%;
+            background: #0e1728;
+            border: 1px solid rgba(148, 163, 184, .17);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            animation: rise .25s ease both
+        }
+
+        .modal-title {
+            font-family: "Space Grotesk";
+            font-weight: 700;
+            font-size: 19px;
+            margin-bottom: 18px
+        }
+
+        .form-msg {
+            font-size: 11px;
+            margin: 4px 0 10px;
+            display: none
+        }
+
+        .form-msg.show {
+            display: block
+        }
+
+        .form-msg.err {
+            color: var(--red)
+        }
+
+        .form-msg.ok {
+            color: var(--green)
+        }
+
+        .mono {
+            font-family: "JetBrains Mono", monospace;
+            font-variant-numeric: tabular-nums
+        }
+
+        .softphone-status {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(3, 8, 18, .7);
+            margin-bottom: 16px
+        }
+
+        .softphone-status .dot {
+            margin-right: 0
+        }
+
+        .softphone-log {
+            margin-top: 14px;
+            background: rgba(3, 8, 18, .7);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px;
+            font-family: "JetBrains Mono";
+            font-size: 10.5px;
+            color: var(--muted);
+            max-height: 120px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word
+        }
+
+        .softphone-audio {
+            width: 100%;
+            margin-top: 10px
+        }
+
+        select.text-input {
+            appearance: none;
+            -webkit-appearance: none
+        }
+
+        @media(max-width:1050px) {
+            .sidebar {
+                width: 210px
+            }
+
+            .main {
+                margin-left: 210px;
+                width: calc(100% - 210px);
+                padding: 22px
+            }
+
+            .stat-strip {
+                grid-template-columns: repeat(3, 1fr)
+            }
+
+            .columns {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:760px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                bottom: auto;
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+                padding: 15px;
+                flex-direction: row;
+                align-items: center;
+                overflow: auto
+            }
+
+            .brand {
+                padding: 0 8px;
+                margin-right: 10px
+            }
+
+            .nav-label,
+            .sidebar-bottom {
+                display: none
+            }
+
+            .nav-btn {
+                width: auto;
+                white-space: nowrap;
+                margin: 0 3px
+            }
+
+            .main {
+                margin-left: 0;
+                width: 100%;
+                padding: 18px
+            }
+
+            .app {
+                display: block
+            }
+
+            .topbar {
+                height: auto;
+                align-items: flex-start
+            }
+
+            .session-label {
+                display: none
+            }
+
+            .hero h1 {
+                font-size: 24px
+            }
+
+            .stat-strip {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .chart-row {
+                flex-direction: column
+            }
+        }
+
+        @media(max-width:480px) {
+            .main {
+                padding: 14px
+            }
+
+            .top-title {
+                font-size: 20px
+            }
+
+            .stat-strip {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .tenant-grid {
+                grid-template-columns: 1fr
+            }
+        }
+    .tenant-card-actions{display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.btn-card-action{flex:1;text-align:center;padding:7px 8px;font-size:10.5px}.btn-danger{color:var(--red);border-color:rgba(255,100,124,.25)}.btn-danger:hover{color:#ffb3bd;border-color:rgba(255,100,124,.45);background:rgba(255,100,124,.08)}
+</style>
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 17V9M9 17V6M14 17V3M19 17V1" stroke="white" stroke-width="2.5"
+                            stroke-linecap="round" />
+                    </svg></div>
+                <div>
+                    <div class="brand-name">VoxPME</div>
+                    <div class="brand-sub">OPERATIONS CENTER</div>
+                </div>
+            </div>
+            <div class="nav-label">Navigation</div>
+            <button class="nav-btn active" onclick="showGlobalView()"><span class="nav-icon">⌂</span>Dashboard</button>
+            <button class="nav-btn"
+                onclick="document.getElementById('tenant-grid')?.scrollIntoView({behavior:'smooth'})"><span
+                    class="nav-icon">◈</span>Tenants</button>
+            <button class="nav-btn" onclick="location.reload()"><span class="nav-icon">↻</span>Actualiser</button>
+            <div class="sidebar-bottom">
+                <div class="status-mini"><span class="live-dot"></span><span>Services opérationnels</span></div>
+            </div>
+        </aside>
+        <main class="main">
+            <div class="topbar">
+                <div>
+                    <div class="top-title">Centre de contrôle</div>
+                    <div class="top-sub" id="subtitle">Console opérateur — vue d'ensemble des tenants</div>
+                </div>
+                <div class="session-box" id="session-box" style="display:none">
+                    <div class="session-label"><span class="who" id="session-who"></span><span class="role-tag"
+                            id="session-role-tag"></span></div><button class="btn btn-ghost"
+                        onclick="logout()">Déconnexion</button>
+                </div>
+            </div>
+
+            <div id="view-login">
+                <div class="login-wrap"><svg class="signal-line" viewBox="0 0 800 180" preserveAspectRatio="none">
+                        <path d="M0,90 L150,90 L190,30 L230,145 L270,70 L310,90 L800,90" />
+                    </svg>
+                    <div class="login-card">
+                        <div class="brand">
+                            <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 17V9M9 17V6M14 17V3M19 17V1" stroke="white" stroke-width="2.5"
+                                        stroke-linecap="round" />
+                                </svg></div>
+                            <div>
+                                <div class="brand-name">VoxPME</div>
+                                <div class="brand-sub">SECURE ACCESS</div>
+                            </div>
+                        </div>
+                        <div class="subtitle" style="margin-bottom:25px">Console d'exploitation téléphonique</div>
+                        <div class="field"><label>Identifiant</label><input type="text" class="text-input"
+                                id="login-username" autocomplete="username"></div>
+                        <div class="field"><label>Mot de passe</label><input type="password" class="text-input"
+                                id="login-password" autocomplete="current-password"></div><button class="btn"
+                            onclick="doLogin()">Se connecter</button>
+                        <div class="login-error" id="login-error"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-global">
+                <div class="hero">
+                    <div class="hero-content">
+                        <div class="hero-kicker">● Live monitoring</div>
+                        <h1>Vue d'ensemble</h1>
+                        <p>Supervisez vos entreprises, postes, trunks et coûts téléphoniques depuis un espace unique.
+                        </p>
+                    </div>
+                </div>
+                <div class="section-head">
+                    <h2>Vos tenants</h2>
+                    <div class="section-head-right"><span class="section-count" id="global-count"></span><button
+                            class="btn" id="btn-new-tenant" onclick="openNewTenantModal()" style="display:none">＋
+                            Nouveau tenant</button></div>
+                </div>
+                <div id="global-status" class="state-msg">Chargement…</div>
+                <div class="tenant-grid" id="tenant-grid" style="display:none"></div>
+            </div>
+
+            <div id="view-detail"><span class="breadcrumb" id="breadcrumb-back" onclick="showGlobalView()">← Tous les
+                    tenants</span>
+                <div id="detail-status" class="state-msg">Chargement…</div>
+                <div id="detail-content" style="display:none">
+                    <div id="tenant-manage-actions" style="display:none;gap:9px;margin-bottom:16px"></div>
+                    <h1 class="detail-heading" id="detail-heading"></h1>
+                    <div class="stat-strip" id="detail-stats"></div>
+                    <div class="columns">
+                        <div>
+                            <div class="panel-head-row">
+                                <div class="panel-title-bare">Postes actifs</div><button class="btn btn-ghost btn-small"
+                                    id="btn-new-endpoint" style="display:none" onclick="toggleNewEndpointForm()">＋
+                                    Nouveau poste</button>
+                            </div>
+                            <div class="panel-block inline-form-card" id="new-endpoint-form" style="display:none">
+                                <div class="field"><label>Extension</label><input type="number" class="text-input"
+                                        id="ne-extension" placeholder="1005"></div>
+                                <div class="field"><label>Nom</label><input type="text" class="text-input" id="ne-nom"
+                                        placeholder="Nom du poste"></div>
+                                <div class="field"><label>Email (optionnel)</label><input type="email"
+                                        class="text-input" id="ne-email" placeholder="email@exemple.com"></div>
+                                <div class="field"><label>Mot de passe SIP</label><input type="password"
+                                        class="text-input" id="ne-password" placeholder="Min. 8 caractères"></div>
+                                <div class="form-msg" id="ne-msg"></div>
+                                <div class="inline-form-actions"><button class="btn btn-ghost btn-small"
+                                        onclick="toggleNewEndpointForm()">Annuler</button><button class="btn btn-small"
+                                        onclick="submitNewEndpoint()">Créer le poste</button></div>
+                            </div>
+                            <div class="panel-block" id="endpoints-list"></div>
+                        </div>
+                        <div>
+                            <div class="panel-title-bare">Activité en temps réel</div>
+                            <div class="chart-row">
+                                <div class="panel-block chart-card" id="hourly-chart-card"></div>
+                                <div class="panel-block chart-card" id="donut-chart-card"></div>
+                            </div>
+                            <div class="panel-title-bare">Journal d'appels</div>
+                            <div class="panel-block" id="calls-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="new-tenant-overlay">
+        <div class="modal-card">
+            <div class="modal-title">Créer un nouveau tenant</div>
+            <div class="field"><label>Slug (identifiant court)</label><input type="text" class="text-input" id="nt-slug"
+                    placeholder="t003"></div>
+            <div class="field"><label>Nom</label><input type="text" class="text-input" id="nt-nom"
+                    placeholder="Nom de l'entreprise"></div>
+            <div class="field"><label>Extension — début</label><input type="number" class="text-input" id="nt-debut"
+                    placeholder="3001"></div>
+            <div class="field"><label>Extension — fin</label><input type="number" class="text-input" id="nt-fin"
+                    placeholder="3099"></div>
+            <div class="form-msg" id="nt-msg"></div>
+            <div class="modal-actions"><button class="btn btn-ghost"
+                    onclick="closeNewTenantModal()">Annuler</button><button class="btn"
+                    onclick="submitNewTenant()">Créer</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="softphone-overlay">
+        <div class="modal-card">
+            <div class="modal-title" id="sp-title">Softphone</div>
+
+            <div class="softphone-status">
+                <span class="dot" id="sp-status-dot"></span>
+                <span id="sp-status-text">Déconnecté</span>
+            </div>
+
+            <div class="field">
+                <label>Mot de passe SIP</label>
+                <input type="password" class="text-input" id="sp-password" placeholder="Mot de passe du poste">
+            </div>
+            <button class="btn" id="sp-btn-connect" onclick="spConnect()" style="width:100%">Se connecter</button>
+
+            <div class="field" style="margin-top:18px">
+                <label>Appeler (postes du même tenant)</label>
+                <select class="text-input" id="sp-target"></select>
+            </div>
+            <div style="display:flex;gap:9px">
+                <button class="btn" id="sp-btn-call" onclick="spCall()" disabled style="flex:1">Appeler</button>
+                <button class="btn btn-ghost" id="sp-btn-hangup" onclick="spHangup()" disabled style="flex:1">Raccrocher</button>
+            </div>
+            <audio id="sp-audio" class="softphone-audio" autoplay></audio>
+
+            <div class="softphone-log" id="sp-log"></div>
+
+            <div class="modal-actions"><button class="btn btn-ghost" onclick="closeSoftphoneModal()">Fermer</button></div>
+        </div>
+    </div>
+
+    <script>const API_BASE = "/api";
+        let session = null;
+        let currentTenantSlug = null;
+        let currentTenantEndpointsList = [];
+
+        // --- Session (JWT) ---
+        function loadSession() {
+            const raw = localStorage.getItem("voxpme_session");
+            if (!raw) return null;
+            try { return JSON.parse(raw); } catch { return null; }
+        }
+
+        function saveSession(s) { localStorage.setItem("voxpme_session", JSON.stringify(s)); }
+        function clearSession() { localStorage.removeItem("voxpme_session"); }
+
+        function logout() {
+            clearSession();
+            session = null;
+            location.reload();
+        }
+
+        async function apiGet(path) {
+            const res = await fetch(API_BASE + path, {
+                headers: { "Authorization": "Bearer " + (session ? session.token : "") }
+            });
+            if (res.status === 401) {
+                clearSession();
+                session = null;
+                const err = new Error("session expiree");
+                err.status = 401;
+                throw err;
+            }
+            if (res.status === 403) {
+                const err = new Error("acces refuse");
+                err.status = 403;
+                throw err;
+            }
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.detail || `Erreur HTTP ${res.status}`);
+            }
+            return res.json();
+        }
+
+        async function apiPost(path, payload) {
+            const res = await fetch(API_BASE + path, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + (session ? session.token : "")
+                },
+                body: JSON.stringify(payload)
+            });
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                const err = new Error(body.detail || `Erreur HTTP ${res.status}`);
+                err.status = res.status;
+                throw err;
+            }
+            return body;
+        }
+
+        async function apiPatch(path, payload) {
+            const res = await fetch(API_BASE + path, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + (session ? session.token : "")
+                },
+                body: JSON.stringify(payload)
+            });
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                const err = new Error(body.detail || `Erreur HTTP ${res.status}`);
+                err.status = res.status;
+                throw err;
+            }
+            return body;
+        }
+
+        async function apiDelete(path) {
+            const res = await fetch(API_BASE + path, {
+                method: "DELETE",
+                headers: { "Authorization": "Bearer " + (session ? session.token : "") }
+            });
+            if (res.status === 204) return null;
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                const err = new Error(body.detail || `Erreur HTTP ${res.status}`);
+                err.status = res.status;
+                throw err;
+            }
+            return body;
+        }
+
+        async function doLogin() {
+            const username = document.getElementById("login-username").value.trim();
+            const password = document.getElementById("login-password").value;
+            const errEl = document.getElementById("login-error");
+            errEl.classList.remove("show");
+
+            if (!username || !password) {
+                errEl.textContent = "Identifiant et mot de passe requis.";
+                errEl.classList.add("show");
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + "/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+                if (res.status === 401) {
+                    errEl.textContent = "Identifiant ou mot de passe incorrect.";
+                    errEl.classList.add("show");
+                    return;
+                }
+                if (!res.ok) {
+                    errEl.textContent = "Erreur de connexion au serveur.";
+                    errEl.classList.add("show");
+                    return;
+                }
+                const data = await res.json();
+                session = { token: data.access_token, role: data.role, tenantSlug: data.tenant_slug, username };
+                saveSession(session);
+                boot();
+            } catch (err) {
+                errEl.textContent = "Erreur réseau : " + err.message;
+                errEl.classList.add("show");
+            }
+        }
+
+        function fmtDuree(secondes) {
+            const m = Math.floor(secondes / 60);
+            const s = secondes % 60;
+            return `${m}m${String(s).padStart(2, "0")}s`;
+        }
+
+        function fmtDate(iso) {
+            if (!iso) return "—";
+            const d = new Date(iso);
+            return d.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+        }
+
+        function fmtCout(valeur, devise) {
+            if (valeur === null || valeur === undefined) return "—";
+            return `${valeur.toFixed(2)} ${devise || ""}`.trim();
+        }
+
+        function directionArrow(typeAppel) {
+            const t = (typeAppel || "").toLowerCase();
+            if (t.includes("entr")) return `<span class="dir-arrow in">↓</span>`;
+            if (t.includes("sort")) return `<span class="dir-arrow out">↑</span>`;
+            return `<span class="dir-arrow">·</span>`;
+        }
+
+        // --- Nouveau tenant (admin global) ---
+        function openNewTenantModal() {
+            const msgEl = document.getElementById("nt-msg");
+            msgEl.className = "form-msg";
+            msgEl.textContent = "";
+            ["nt-slug", "nt-nom", "nt-debut", "nt-fin"].forEach(id => document.getElementById(id).value = "");
+            document.getElementById("new-tenant-overlay").style.display = "flex";
+        }
+
+        function closeNewTenantModal() {
+            document.getElementById("new-tenant-overlay").style.display = "none";
+        }
+
+        async function submitNewTenant() {
+            const slug = document.getElementById("nt-slug").value.trim();
+            const nom = document.getElementById("nt-nom").value.trim();
+            const debut = parseInt(document.getElementById("nt-debut").value, 10);
+            const fin = parseInt(document.getElementById("nt-fin").value, 10);
+            const msgEl = document.getElementById("nt-msg");
+            msgEl.className = "form-msg";
+
+            if (!slug || !nom || !debut || !fin) {
+                msgEl.textContent = "Tous les champs sont requis.";
+                msgEl.classList.add("show", "err");
+                return;
+            }
+            if (fin <= debut) {
+                msgEl.textContent = "La fin de plage doit être supérieure au début.";
+                msgEl.classList.add("show", "err");
+                return;
+            }
+
+            try {
+                const data = await apiPost("/tenants", {
+                    slug, nom, plage_ext_debut: debut, plage_ext_fin: fin
+                });
+                msgEl.textContent = `Tenant '${data.slug}' créé. Identifiants admin (à noter, non réaffichés) — utilisateur : ${data.admin_username} / mot de passe : ${data.admin_temp_password} / clé API : ${data.api_key}`;
+                msgEl.classList.add("show", "ok");
+                setTimeout(() => {
+                    closeNewTenantModal();
+                    loadGlobalView();
+                }, 12000);
+            } catch (err) {
+                if (err.status === 401) { location.reload(); return; }
+                msgEl.textContent = err.message;
+                msgEl.classList.add("show", "err");
+            }
+        }
+
+        // --- Nouveau poste SIP (admin-tenant ou admin global sur un tenant) ---
+        function toggleNewEndpointForm() {
+            const form = document.getElementById("new-endpoint-form");
+            const opening = form.style.display === "none";
+            form.style.display = opening ? "block" : "none";
+            if (opening) {
+                const msgEl = document.getElementById("ne-msg");
+                msgEl.className = "form-msg";
+                msgEl.textContent = "";
+                ["ne-extension", "ne-nom", "ne-email", "ne-password"].forEach(id => document.getElementById(id).value = "");
+            }
+        }
+
+        async function submitNewEndpoint() {
+            const extension = parseInt(document.getElementById("ne-extension").value, 10);
+            const nom = document.getElementById("ne-nom").value.trim();
+            const email = document.getElementById("ne-email").value.trim();
+            const password = document.getElementById("ne-password").value;
+            const msgEl = document.getElementById("ne-msg");
+            msgEl.className = "form-msg";
+
+            if (!extension || !nom || !password) {
+                msgEl.textContent = "Extension, nom et mot de passe sont requis.";
+                msgEl.classList.add("show", "err");
+                return;
+            }
+            if (password.length < 8) {
+                msgEl.textContent = "Le mot de passe SIP doit faire au moins 8 caractères.";
+                msgEl.classList.add("show", "err");
+                return;
+            }
+
+            try {
+                await apiPost("/endpoints", {
+                    tenant_slug: currentTenantSlug,
+                    extension, nom,
+                    email: email || null,
+                    password
+                });
+                toggleNewEndpointForm();
+                showTenantDetail(currentTenantSlug);
+            } catch (err) {
+                if (err.status === 401) { location.reload(); return; }
+                msgEl.textContent = err.message;
+                msgEl.classList.add("show", "err");
+            }
+        }
+
+        // --- Suppression d'un poste SIP (admin-tenant ou admin global sur ce tenant) ---
+        async function confirmDeleteEndpoint(slug, extension, nom) {
+            const ok = confirm(`Supprimer le poste "${nom}" (${extension}-${slug}) ?\n\nCette action est irreversible : identifiants SIP et dialplan associe seront supprimes.`);
+            if (!ok) return;
+            try {
+                await apiDelete(`/endpoints/${slug}/${extension}`);
+                showTenantDetail(slug);
+            } catch (err) {
+                if (err.status === 401) { location.reload(); return; }
+                alert("Erreur lors de la suppression du poste : " + err.message);
+            }
+        }
+
+        function deleteEndpointByExtension(extension) {
+            const ep = currentTenantEndpointsList.find(e => e.extension === extension);
+            confirmDeleteEndpoint(currentTenantSlug, extension, ep ? (ep.nom || "—") : extension);
+        }
+
+        // --- Softphone WebRTC embarque (SIP.js), restreint aux postes du tenant courant ---
+        let spUserAgent = null;
+        let spSession = null;
+        let spContext = { slug: null, endpointId: null };
+
+        function spLog(msg) {
+            const el = document.getElementById("sp-log");
+            if (!el) return;
+            const time = new Date().toLocaleTimeString();
+            el.textContent += `[${time}] ${msg}\n`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function spSetStatus(text, kind) {
+            document.getElementById("sp-status-text").textContent = text;
+            document.getElementById("sp-status-dot").className = "dot" + (kind ? " " + kind : "");
+        }
+
+        function openSoftphoneForExtension(extension) {
+            const ep = currentTenantEndpointsList.find(e => e.extension === extension);
+            if (!ep) return;
+            const others = currentTenantEndpointsList.filter(e => e.extension !== extension);
+            openSoftphone(currentTenantSlug, extension, ep.nom || "—", others);
+        }
+
+        function openSoftphone(slug, extension, nom, otherEndpoints) {
+            closeSoftphoneModal(); // ferme/nettoie toute session precedente avant d'en ouvrir une nouvelle
+
+            spContext = { slug, endpointId: `${extension}-${slug}` };
+            document.getElementById("sp-title").textContent = `Softphone — ${nom} (${extension}-${slug})`;
+            document.getElementById("sp-password").value = "";
+            document.getElementById("sp-log").textContent = "";
+            spSetStatus("Déconnecté", "");
+            document.getElementById("sp-btn-connect").disabled = false;
+            document.getElementById("sp-btn-call").disabled = true;
+            document.getElementById("sp-btn-hangup").disabled = true;
+
+            const targetSel = document.getElementById("sp-target");
+            targetSel.innerHTML = "";
+            if (!otherEndpoints.length) {
+                const opt = document.createElement("option");
+                opt.textContent = "Aucun autre poste dans ce tenant";
+                opt.disabled = true;
+                targetSel.appendChild(opt);
+            } else {
+                for (const ep of otherEndpoints) {
+                    const opt = document.createElement("option");
+                    opt.value = String(ep.extension);
+                    opt.textContent = `${ep.extension} — ${ep.nom || "—"}`;
+                    targetSel.appendChild(opt);
+                }
+            }
+
+            document.getElementById("softphone-overlay").style.display = "flex";
+        }
+
+        function closeSoftphoneModal() {
+            if (spSession) {
+                try {
+                    if (spSession.state === SIP.SessionState.Established) spSession.bye();
+                    else spSession.cancel();
+                } catch { }
+                spSession = null;
+            }
+            if (spUserAgent) {
+                try { spUserAgent.stop(); } catch { }
+                spUserAgent = null;
+            }
+            document.getElementById("softphone-overlay").style.display = "none";
+        }
+
+        async function spConnect() {
+            const password = document.getElementById("sp-password").value;
+            if (!password) {
+                spLog("Erreur : mot de passe requis.");
+                return;
+            }
+            const host = location.hostname;
+            const username = spContext.endpointId;
+
+            spSetStatus("Connexion en cours...", "busy");
+            document.getElementById("sp-btn-connect").disabled = true;
+
+            const uri = SIP.UserAgent.makeURI(`sip:${username}@${host}`);
+            if (!uri) {
+                spLog("Erreur : URI SIP invalide.");
+                spSetStatus("Erreur de configuration", "err");
+                document.getElementById("sp-btn-connect").disabled = false;
+                return;
+            }
+
+            spUserAgent = new SIP.UserAgent({
+                uri,
+                transportOptions: { server: `wss://${host}/ws-sip/ws` },
+                authorizationUsername: username,
+                authorizationPassword: password,
+                sessionDescriptionHandlerFactoryOptions: {
+                    peerConnectionConfiguration: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }
+                }
+            });
+
+            spUserAgent.delegate = {
+                onInvite: (invitation) => {
+                    spLog("Appel entrant reçu — refusé (softphone sortant uniquement ici).");
+                    invitation.reject();
+                }
+            };
+
+            try {
+                await spUserAgent.start();
+                const registerer = new SIP.Registerer(spUserAgent);
+                registerer.stateChange.addListener((state) => {
+                    spLog(`Enregistrement : ${state}`);
+                    if (state === SIP.RegistererState.Registered) {
+                        spSetStatus("Connecté et enregistré", "on");
+                        document.getElementById("sp-btn-call").disabled = false;
+                    } else if (state === SIP.RegistererState.Unregistered) {
+                        spSetStatus("Déconnecté", "");
+                        document.getElementById("sp-btn-call").disabled = true;
+                    }
+                });
+                await registerer.register();
+                spLog("Connexion WebSocket établie, enregistrement en cours...");
+            } catch (err) {
+                spLog("Erreur de connexion : " + err.message);
+                spSetStatus("Échec de connexion (voir journal)", "err");
+                document.getElementById("sp-btn-connect").disabled = false;
+            }
+        }
+
+        async function spCall() {
+            const target = document.getElementById("sp-target").value;
+            const host = location.hostname;
+            if (!target || !spUserAgent) return;
+
+            const targetURI = SIP.UserAgent.makeURI(`sip:${target}@${host}`);
+            if (!targetURI) { spLog("Erreur : destination invalide."); return; }
+
+            const inviter = new SIP.Inviter(spUserAgent, targetURI, {
+                sessionDescriptionHandlerOptions: { constraints: { audio: true, video: false } }
+            });
+            spSession = inviter;
+
+            spSession.stateChange.addListener((state) => {
+                spLog(`Appel : ${state}`);
+                if (state === SIP.SessionState.Established) {
+                    spSetStatus(`En communication avec ${target}`, "on");
+                    document.getElementById("sp-btn-call").disabled = true;
+                    document.getElementById("sp-btn-hangup").disabled = false;
+                    spAttachRemoteAudio(spSession);
+                } else if (state === SIP.SessionState.Terminated) {
+                    spSetStatus("Connecté et enregistré", "on");
+                    document.getElementById("sp-btn-call").disabled = false;
+                    document.getElementById("sp-btn-hangup").disabled = true;
+                    spSession = null;
+                }
+            });
+
+            try {
+                await inviter.invite();
+                spLog(`Appel sortant vers ${target} lancé.`);
+                spSetStatus("Appel en cours...", "busy");
+            } catch (err) {
+                spLog("Erreur lors de l'appel : " + err.message);
+            }
+        }
+
+        async function spHangup() {
+            if (!spSession) return;
+            try {
+                if (spSession.state === SIP.SessionState.Established) {
+                    await spSession.bye();
+                } else {
+                    await spSession.cancel();
+                }
+                spLog("Raccroché.");
+            } catch (err) {
+                spLog("Erreur au raccrochage : " + err.message);
+            }
+        }
+
+        function spAttachRemoteAudio(sess) {
+            const pc = sess.sessionDescriptionHandler.peerConnection;
+            const remoteStream = new MediaStream();
+            pc.getReceivers().forEach((receiver) => { if (receiver.track) remoteStream.addTrack(receiver.track); });
+            document.getElementById("sp-audio").srcObject = remoteStream;
+        }
+
+        // --- Suspendre / reactiver / supprimer un tenant (admin global uniquement,
+        //     actions accessibles depuis le detail du tenant) ---
+        async function toggleTenantStatus(slug, nextStatus, onDone) {
+            try {
+                await apiPatch(`/tenants/${slug}/statut`, { statut: nextStatus });
+                (onDone || loadGlobalView)();
+            } catch (err) {
+                if (err.status === 401) { location.reload(); return; }
+                alert("Erreur lors du changement de statut : " + err.message);
+            }
+        }
+
+        async function confirmDeleteTenant(slug, nom, onDone) {
+            const ok = confirm(`Supprimer definitivement le tenant "${nom}" (${slug}) ?\n\nCette action est irreversible : postes SIP, comptes admin et donnees associees seront supprimes.`);
+            if (!ok) return;
+            try {
+                await apiDelete(`/tenants/${slug}`);
+                (onDone || loadGlobalView)();
+            } catch (err) {
+                if (err.status === 401) { location.reload(); return; }
+                alert("Erreur lors de la suppression : " + err.message);
+            }
+        }
+
+        // --- Vue globale ---
+        async function loadGlobalView() {
+            const statusEl = document.getElementById("global-status");
+            const gridEl = document.getElementById("tenant-grid");
+            const countEl = document.getElementById("global-count");
+
+            statusEl.textContent = "Chargement…";
+            statusEl.className = "state-msg";
+            statusEl.style.display = "block";
+            gridEl.style.display = "none";
+
+            try {
+                const data = await apiGet("/dashboard/summary");
+                gridEl.innerHTML = "";
+                countEl.textContent = `${data.nb_tenants} tenant${data.nb_tenants > 1 ? "s" : ""}`;
+
+                if (data.tenants.length === 0) {
+                    statusEl.textContent = "Aucun tenant.";
+                    return;
+                }
+
+                const maxCost = Math.max(...data.tenants.map(t => t.cout_total_aujourdhui || 0), 0.01);
+
+                for (const t of data.tenants) {
+                    const pct = Math.max(4, Math.round(((t.cout_total_aujourdhui || 0) / maxCost) * 100));
+                    const card = document.createElement("div");
+                    card.className = "tenant-card";
+                    card.tabIndex = 0;
+                    card.onclick = () => showTenantDetail(t.slug);
+                    card.onkeydown = (e) => { if (e.key === "Enter") showTenantDetail(t.slug); };
+                    card.innerHTML = `
+                        <div class="tenant-card-head">
+                            <span class="dot ${t.statut === 'actif' ? 'on' : 'off'}"></span>
+                            <span class="tenant-name">${t.nom}</span>
+                            <span class="tenant-slug mono">${t.slug}</span>
+                        </div>
+                        <div class="tenant-metrics">
+                            <div><div class="m-value mono">${t.nb_endpoints}</div><div class="m-label">Postes</div></div>
+                            <div><div class="m-value mono">${t.nb_trunks}</div><div class="m-label">Trunks</div></div>
+                            <div><div class="m-value mono">${t.appels_aujourdhui}</div><div class="m-label">Appels</div></div>
+                        </div>
+                        <div class="cost-bar-track"><div class="cost-bar-fill" style="width:${pct}%"></div></div>
+                        <div class="cost-bar-label">
+                            <span>Coût du jour</span>
+                            <span class="mono">${fmtCout(t.cout_total_aujourdhui, t.devise)}</span>
+                        </div>
+                    `;
+                    gridEl.appendChild(card);
+                }
+
+                statusEl.style.display = "none";
+                gridEl.style.display = "grid";
+            } catch (err) {
+                if (err.status === 401) { location.reload(); return; }
+                statusEl.textContent = "Erreur : " + err.message;
+                statusEl.className = "state-msg error";
+            }
+        }
+
+        // --- Graphiques (données réelles issues des appels renvoyés par l'API) ---
+        function renderHourlyChart(calls) {
+            const buckets = new Array(24).fill(0);
+            for (const c of calls) {
+                if (!c.date_heure_debut) continue;
+                const h = new Date(c.date_heure_debut).getHours();
+                buckets[h]++;
+            }
+            const max = Math.max(...buckets, 1);
+            const w = 260, h = 90, barW = w / 24;
+            let bars = "";
+            for (let i = 0; i < 24; i++) {
+                const bh = (buckets[i] / max) * (h - 4);
+                bars += `<rect x="${i * barW + 1}" y="${h - bh}" width="${barW - 1.5}" height="${bh || 1}" rx="1" fill="var(--cyan)" opacity="${buckets[i] ? 1 : 0.18}"/>`;
+            }
+            document.getElementById("hourly-chart-card").innerHTML = `
+                <div class="panel-block-title" style="margin:-15px -15px 12px;">Répartition horaire</div>
+                <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">${bars}</svg>
+                <div class="chart-caption">Derniers appels chargés, par heure de la journée</div>
+            `;
+        }
+
+        function renderDonutChart(calls) {
+            let entrants = 0, sortants = 0, autres = 0;
+            for (const c of calls) {
+                const t = (c.type_appel || "").toLowerCase();
+                if (t.includes("entr")) entrants++;
+                else if (t.includes("sort")) sortants++;
+                else autres++;
+            }
+            const total = entrants + sortants + autres;
+            const r = 30, cx = 40, cy = 40, circ = 2 * Math.PI * r;
+
+            let offset = 0;
+            const segs = [
+                { v: entrants, color: "var(--green)" },
+                { v: sortants, color: "var(--cyan)" },
+                { v: autres, color: "var(--muted)" },
+            ];
+            let arcs = "";
+            for (const s of segs) {
+                if (!s.v || !total) continue;
+                const len = (s.v / total) * circ;
+                arcs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="9"
+                    stroke-dasharray="${len} ${circ - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`;
+                offset += len;
+            }
+            if (!total) {
+                arcs = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(148,163,184,.13)" stroke-width="9"/>`;
+            }
+
+            document.getElementById("donut-chart-card").innerHTML = `
+                <div class="panel-block-title" style="margin:-15px -15px 12px;">Entrant / sortant</div>
+                <div class="donut-wrap">
+                    <svg viewBox="0 0 80 80" width="80" height="80">${arcs}</svg>
+                    <div class="donut-legend">
+                        <div><span class="swatch" style="background:var(--green)"></span>Entrants <span class="mono">${entrants}</span></div>
+                        <div><span class="swatch" style="background:var(--cyan)"></span>Sortants <span class="mono">${sortants}</span></div>
+                        <div><span class="swatch" style="background:var(--muted)"></span>Autres <span class="mono">${autres}</span></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Vue détail ---
+        async function showTenantDetail(slug) {
+            currentTenantSlug = slug;
+
+            document.getElementById("view-global").style.display = "none";
+            document.getElementById("view-detail").style.display = "block";
+            document.getElementById("subtitle").textContent = `Détail du tenant`;
+            document.getElementById("breadcrumb-back").style.display = (session.role === "global") ? "inline-block" : "none";
+
+            const canManage = session.role === "global" || session.tenantSlug === slug;
+            document.getElementById("btn-new-endpoint").style.display = canManage ? "inline-block" : "none";
+            document.getElementById("new-endpoint-form").style.display = "none";
+
+            const statusEl = document.getElementById("detail-status");
+            const contentEl = document.getElementById("detail-content");
+            const statsEl = document.getElementById("detail-stats");
+            const endpointsEl = document.getElementById("endpoints-list");
+            const callsEl = document.getElementById("calls-list");
+
+            statusEl.textContent = "Chargement…";
+            statusEl.className = "state-msg";
+            statusEl.style.display = "block";
+            contentEl.style.display = "none";
+
+            try {
+                const [summary, endpoints, calls] = await Promise.all([
+                    apiGet(`/dashboard/tenants/${slug}/summary`),
+                    apiGet(`/dashboard/tenants/${slug}/endpoints`),
+                    apiGet(`/dashboard/tenants/${slug}/calls?limit=100`),
+                ]);
+
+                currentTenantEndpointsList = endpoints;
+
+                document.getElementById("detail-heading").innerHTML =
+                    `${summary.nom}<span class="slug mono">${summary.slug}</span>`;
+
+                const manageEl = document.getElementById("tenant-manage-actions");
+                if (session.role === "global") {
+                    const statutActuel = summary.statut || "actif";
+                    const nextStatus = statutActuel === "actif" ? "suspendu" : "actif";
+                    const label = statutActuel === "actif" ? "Suspendre ce tenant" : "Réactiver ce tenant";
+                    const nomEchappe = (summary.nom || "").replace(/'/g, "\\'");
+                    manageEl.innerHTML = `
+                        <button type="button" class="btn btn-ghost btn-small" onclick="toggleTenantStatus('${slug}', '${nextStatus}', () => showTenantDetail('${slug}'))">${label}</button>
+                        <button type="button" class="btn btn-ghost btn-small btn-danger" onclick="confirmDeleteTenant('${slug}', '${nomEchappe}', showGlobalView)">Supprimer ce tenant</button>
+                    `;
+                    manageEl.style.display = "flex";
+                } else {
+                    manageEl.innerHTML = "";
+                    manageEl.style.display = "none";
+                }
+
+                statsEl.innerHTML = `
+                    <div class="stat"><div class="value mono">${summary.nb_endpoints}</div><div class="label">Postes</div></div>
+                    <div class="stat"><div class="value mono">${summary.nb_trunks}</div><div class="label">Trunks</div></div>
+                    <div class="stat"><div class="value mono">${summary.appels_aujourdhui}</div><div class="label">Appels aujourd'hui</div></div>
+                    <div class="stat"><div class="value mono">${fmtDuree(summary.duree_totale_aujourdhui_secondes)}</div><div class="label">Durée cumulée</div></div>
+                    <div class="stat"><div class="value mono">${fmtCout(summary.cout_total_aujourdhui, summary.devise)}</div><div class="label">Coût du jour</div></div>
+                `;
+
+                endpointsEl.innerHTML = "";
+                if (endpoints.length === 0) {
+                    endpointsEl.innerHTML = `<div class="state-msg">Aucun poste configuré.</div>`;
+                } else {
+                    for (const ep of endpoints) {
+                        const label = ep.registered ? (ep.status || "Enregistré") : "Non enregistré";
+                        const row = document.createElement("div");
+                        row.className = "list-row";
+                        row.innerHTML = `
+                            <span class="ep-left">
+                                <span class="dot ${ep.registered ? 'on' : 'off'}"></span>
+                                <span class="mono">${ep.extension ?? "—"}</span>
+                                <span class="ep-name">${ep.nom || "—"}</span>
+                            </span>
+                            <span class="ep-actions">
+                                <span class="status-tag ${ep.registered ? 'live' : ''}">${label}</span>
+                                ${canManage ? `
+                                    <button type="button" class="btn-ghost btn-small" onclick="openSoftphoneForExtension(${ep.extension})">☎ Softphone</button>
+                                    <button type="button" class="btn-ghost btn-small btn-danger" onclick="deleteEndpointByExtension(${ep.extension})">Supprimer</button>
+                                ` : ""}
+                            </span>
+                        `;
+                        endpointsEl.appendChild(row);
+                    }
+                }
+
+                renderHourlyChart(calls);
+                renderDonutChart(calls);
+
+                callsEl.innerHTML = "";
+                if (calls.length === 0) {
+                    callsEl.innerHTML = `<div class="state-msg">Aucun appel enregistré.</div>`;
+                } else {
+                    for (const c of calls.slice(0, 25)) {
+                        const row = document.createElement("div");
+                        row.className = "list-row call-row";
+                        row.innerHTML = `
+                            <div class="call-top">
+                                <span class="call-parties">
+                                    ${directionArrow(c.type_appel)}
+                                    <span class="mono">${c.appelant}</span>
+                                    <span style="color:var(--muted)">→</span>
+                                    <span class="mono">${c.appele}</span>
+                                </span>
+                                <span class="call-cost mono">${fmtCout(c.cout_facture, c.devise)}</span>
+                            </div>
+                            <div class="call-meta mono">${fmtDate(c.date_heure_debut)} · ${fmtDuree(c.duree_secondes)} · ${c.statut}</div>
+                        `;
+                        callsEl.appendChild(row);
+                    }
+                }
+
+                statusEl.style.display = "none";
+                contentEl.style.display = "block";
+            } catch (err) {
+                if (err.status === 401) { location.reload(); return; }
+                statusEl.textContent = err.status === 403 ? "Accès refusé à ce tenant." : "Erreur : " + err.message;
+                statusEl.className = "state-msg error";
+            }
+        }
+
+        function showGlobalView() {
+            if (session.role !== "global") return;
+            document.getElementById("view-detail").style.display = "none";
+            document.getElementById("view-global").style.display = "block";
+            document.getElementById("subtitle").textContent = "Console opérateur — vue d'ensemble des tenants";
+            document.getElementById("btn-new-tenant").style.display = "inline-block";
+            loadGlobalView();
+        }
+
+        function boot() {
+            document.getElementById("view-login").style.display = "none";
+            if (!session) session = loadSession();
+
+            if (!session) {
+                document.getElementById("view-login").style.display = "block";
+                document.getElementById("session-box").style.display = "none";
+                document.getElementById("subtitle").textContent = "Console opérateur";
+                return;
+            }
+
+            document.getElementById("session-box").style.display = "flex";
+            document.getElementById("session-who").textContent = session.username;
+            const tag = document.getElementById("session-role-tag");
+            if (session.role === "global") {
+                tag.textContent = "ADMIN GLOBAL";
+                tag.className = "role-tag global";
+            } else {
+                tag.textContent = "TENANT " + session.tenantSlug;
+                tag.className = "role-tag tenant";
+            }
+
+            if (session.role === "global") {
+                showGlobalView();
+            } else {
+                showTenantDetail(session.tenantSlug);
+            }
+        }
+
+        boot();</script>
+</body>
+
+</html>

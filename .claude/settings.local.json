@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/salomon/Downloads/**)",
+      "Bash(dpkg -l)",
+      "Read(//etc/asterisk/**)",
+      "Bash(grep -v \"^$\")",
+      "Bash(sudo asterisk -rx \"logger add channel /tmp/modload.log notice,warning,error,verbose,debug\")",
+      "Bash(sudo asterisk -rx \"core set debug 3\")",
+      "Bash(sudo asterisk -rx \"module load res_pjsip_endpoint_identifier_ip.so\")",
+      "Bash(sudo asterisk -rx \"core set debug 0\")",
+      "Bash(sudo cat /tmp/modload.log)",
+      "Read(//tmp/**)",
+      "Bash(sudo asterisk -rx \"odbc show all\")",
+      "Bash(sudo asterisk -rx \"realtime show voxpme-db ps_endpoint_id_ips id 1\")",
+      "Bash(export PGPASSWORD='Leroi5alomon#')",
+      "Bash(psql -h localhost -U voxpme_app -d voxpme -c \"\\\\d ps_endpoint_id_ips\")",
+      "Bash(psql -h localhost -U voxpme_app -d voxpme -c \"\\\\dt ps_*\")",
+      "Bash(strings /usr/lib/asterisk/modules/res_pjsip_endpoint_identifier_ip.so | grep -x \"srv_lookups\\\\|match_header\\\\|match_request_uri\\\\|match\\\\|endpoint\\\\|identify\\\\|type\" )",
+      "Read(//usr/lib/asterisk/modules/**)",
+      "Bash(psql -h localhost -U voxpme_app -d voxpme -c \"select count\\(*\\) from ps_endpoint_id_ips;\")",
+      "Bash(psql -h localhost -U voxpme_app -d voxpme -c \"select * from ps_endpoint_id_ips;\")",
+      "Bash(sudo asterisk -rx \"module show like endpoint_identifier\")",
+      "Bash(sudo asterisk -rx \"pjsip show identifies\")",
+      "Bash(echo \"=== derniers démarrages ===\"; grep -n \"Asterisk Ready\\\\|Asterisk .* built by\" /var/log/asterisk/messages.log | tail -5 *)",
+      "Read(//var/log/asterisk/**)",
+      "Read(//var/lib/asterisk/documentation/**)",
+      "Bash(xargs ls -la)"
+    ]
+  }
+}
